@@ -65,8 +65,10 @@ export function distance(a, b, max = Infinity) {
  */
 function tolerance(len, deva) {
   if (deva) {
-    if (len <= 4) return 0;
-    if (len <= 8) return 1;
+    // 5 stays at 0: "दलसर" (दिल से रे) and "दलबर" (दिलबरो) are distance 1
+    // apart, and one shouldn't swallow the other
+    if (len <= 5) return 0;
+    if (len <= 9) return 1;
     return 2;
   }
   if (len <= 5) return 0;

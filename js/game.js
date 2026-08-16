@@ -11,6 +11,9 @@ import { buildIndex, findSong } from "./lib/match.js";
 export const TURN_SECONDS = 30;
 export const START_LIVES = 3;
 
+/** Antakshari traditionally opens on म. Falls back to random if म is empty. */
+export const OPENING_LETTER = "म";
+
 export class Game {
   constructor(songs = SONGS) {
     this.songs = songs;
@@ -45,7 +48,11 @@ export class Game {
     this.lastSong = null;
     this.phase = "playing";
     this.emit("start", { lives: this.lives });
-    this._setLetter(this._randomLetter(), false);
+
+    const opener = this._availableFor(OPENING_LETTER).length
+      ? OPENING_LETTER
+      : this._randomLetter();
+    this._setLetter(opener, false);
   }
 
   /** Advance to the next turn. Called by the UI after the reward card. */

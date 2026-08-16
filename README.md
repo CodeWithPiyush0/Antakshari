@@ -6,6 +6,9 @@ A browser antakshari game. You get a Devanagari letter, you type any Hindi film
 song starting with it, and a 15-second hook plays as your reward. The last
 letter of that song becomes the next letter.
 
+356 songs, 1950s to today. Every game opens on **म**, the way antakshari
+traditionally does (`OPENING_LETTER` in `js/game.js`).
+
 ---
 
 ## Run it locally
