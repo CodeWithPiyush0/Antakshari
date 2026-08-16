@@ -5,6 +5,7 @@
 import { SONGS } from "./data/songs.js";
 import { Game } from "./game.js";
 import { validate } from "./lib/validate.js";
+import { searchSong } from "./search.js";
 import * as player from "./player.js";
 import * as ui from "./ui.js";
 
@@ -12,7 +13,9 @@ const BEST_KEY = "antakshari.best";
 const HOOK_MS = 15_000;
 const MISS_PAUSE_MS = 2200;
 
-const game = new Game(SONGS);
+// `search` is what lets the game accept songs outside the bank; without it
+// (plain static host, no /api) only bank songs are recognised.
+const game = new Game(SONGS, { search: searchSong });
 let cardTimer = null;
 let missTimer = null;
 
@@ -59,6 +62,12 @@ game.on("letter", ({ letter, switched }) => {
 
 game.on("tick", ({ timeLeft, total }) => ui.setTimer(timeLeft, total));
 
+// open answer — the clock is paused while we ask YouTube
+game.on("checking", () => {
+  ui.setInputEnabled(false);
+  ui.setFeedback("ढूँढ रहे हैं…");
+});
+
 game.on("correct", async ({ song, streak }) => {
   ui.setHud(streak, game.lives);
   ui.setInputEnabled(false);
@@ -100,30 +109,56 @@ function advance() {
   game.next();
 }
 
-ui.dom.form.addEventListener("submit", (e) => {
+let submitting = false;
+
+ui.dom.form.addEventListener("submit", async (e) => {
   e.preventDefault();
+  if (submitting) return;
+
   const text = ui.dom.input.value.trim();
   if (!text) return;
 
-  const result = game.submit(text);
+  submitting = true;
+  try {
+    const result = await game.submit(text);
 
-  switch (result.status) {
-    case "correct":
-      ui.clearInput();
-      break;
-    case "repeat":
-      ui.shake();
-      ui.setFeedback(`"${result.song.t}" तो पहले ही गा चुके।`, "bad");
-      ui.clearInput();
-      break;
-    case "letter":
-      ui.shake();
-      ui.setFeedback(`"${result.song.t}" — पर वो "${result.song.s}" से है।`, "bad");
-      break;
-    case "unknown":
-      ui.shake();
-      ui.setFeedback("ये गाना पहचान नहीं पाए। कोई और आज़माओ।");
-      break;
+    switch (result.status) {
+      case "correct":
+        ui.clearInput();
+        break;
+
+      case "repeat":
+        ui.shake();
+        ui.setInputEnabled(true);
+        ui.setFeedback(
+          result.song ? `"${result.song.t}" तो पहले ही गा चुके।` : "ये तो पहले ही गा चुके।",
+          "bad"
+        );
+        ui.clearInput();
+        ui.focusInput();
+        break;
+
+      case "letter":
+        ui.shake();
+        ui.setInputEnabled(true);
+        ui.setFeedback(
+          result.song
+            ? `"${result.song.t}" — पर वो "${result.song.s}" से है।`
+            : `ये "${result.guessed}" से लगता है, "${game.letter}" से नहीं।`,
+          "bad"
+        );
+        ui.focusInput();
+        break;
+
+      case "unknown":
+        ui.shake();
+        ui.setInputEnabled(true);
+        ui.setFeedback("ये गाना नहीं मिला। कोई और आज़माओ।");
+        ui.focusInput();
+        break;
+    }
+  } finally {
+    submitting = false;
   }
 });
 

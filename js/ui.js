@@ -96,7 +96,8 @@ export function setInputEnabled(on) {
 
 export function showCard(song, url, audioPlaying) {
   el.cardTitle.textContent = song.t;
-  el.cardMeta.textContent = `${song.f} · ${song.y}`;
+  // open answers carry the YouTube title and no year
+  el.cardMeta.textContent = [song.f, song.y].filter(Boolean).join(" · ");
   el.cardYt.href = url;
   el.eq.classList.toggle("is-on", Boolean(audioPlaying));
   el.cardWrap.hidden = false;

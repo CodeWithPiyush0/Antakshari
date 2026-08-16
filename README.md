@@ -6,23 +6,44 @@ A browser antakshari game. You get a Devanagari letter, you type any Hindi film
 song starting with it, and a 15-second hook plays as your reward. The last
 letter of that song becomes the next letter.
 
-356 songs, 1950s to today. Every game opens on **म**, the way antakshari
-traditionally does (`OPENING_LETTER` in `js/game.js`).
+Every game opens on **म**, the way antakshari traditionally does
+(`OPENING_LETTER` in `js/game.js`).
+
+## Answers resolve in two tiers
+
+**Tier 1 — the bank.** 356 curated songs, 1950s to today. A hit here is exact:
+we know the song's real start letter, its hand-set next letter, and a
+verified-embeddable video.
+
+**Tier 2 — open.** Anything else. The letters are inferred from the text itself
+(`js/lib/translit.js`) and `/api/search` finds a video on YouTube. This is what
+lets the game accept the whole Hindi catalogue instead of a fixed list — a bank
+alone recognised about 1 in 5 of the songs people actually typed.
+
+Open answers are judged leniently, and deliberately so: aspirated pairs
+(क/ख, त/थ) and vowel lengths (अ/आ) are treated as the same letter, because
+romanisation genuinely can't distinguish them. Antakshari is an honour-system
+game; rejecting a song you actually know is worse than letting a near-miss
+through. Gibberish is still rejected — the found video's title has to share
+words with what you typed.
 
 ---
 
 ## Run it locally
 
-ES modules need a real server — opening `index.html` by double-clicking will
-fail with a CORS error. Any of these work:
+ES modules need a real server. For the **full** game including open answers you
+need the API too, which means Vercel's dev server:
+
+```bash
+npx vercel dev
+```
+
+A plain static server works, but `/api/search` won't exist, so only the 356
+bank songs are recognised — everything else comes back "not found":
 
 ```bash
 npx serve .
-# or
-python -m http.server 8000
 ```
-
-Then open the printed URL. In VS Code, the **Live Server** extension also works.
 
 ## Deploy (free)
 
@@ -32,8 +53,12 @@ Drag the folder onto [vercel.com/new](https://vercel.com/new), or:
 npx vercel
 ```
 
-No build step, no framework, no environment variables. It's static files.
-GitHub Pages and Netlify work identically.
+No build step, no framework, no environment variables, no API keys. The
+serverless function runs on the free Hobby tier.
+
+**Note:** GitHub Pages and Netlify Drop serve static files only, so open answers
+won't work there — you'd get the bank-only game. Vercel (or Netlify with
+Functions) is what makes tier 2 work.
 
 ---
 
@@ -42,14 +67,18 @@ GitHub Pages and Netlify work identically.
 ```
 index.html            markup + screens
 css/style.css         all styling (chai-tapri paper palette)
+api/
+  search.js           serverless: free-text song name → playable video
 js/
-  main.js             wiring: game ↔ ui ↔ player
+  main.js             wiring: game ↔ ui ↔ player ↔ search
   game.js             rules and state. no DOM.
   ui.js               all DOM reads/writes. no rules.
   player.js           YouTube IFrame hook playback
+  search.js           client for /api/search
   data/songs.js       the song bank
   lib/
     devanagari.js     akshar (letter) extraction
+    translit.js       roman → Devanagari letter inference
     match.js          fuzzy song lookup
     validate.js       boot-time data sanity check
 ```
@@ -57,6 +86,10 @@ js/
 The split that matters: **`game.js` never touches the DOM and `ui.js` never
 knows a rule.** They talk through events (`game.on("correct", …)`). You can
 change the entire look without opening `game.js`.
+
+`Game` takes its search function by injection —
+`new Game(SONGS, { search })` — so the rules stay testable with a stub and
+work unchanged when there's no backend at all.
 
 ---
 
@@ -76,6 +109,11 @@ Append to `js/data/songs.js`:
   h: 45,       // hook start in seconds (only used when yt is set)
 }
 ```
+
+**Do you still need to?** Only sort of. Open answers already cover any song
+YouTube can find. Adding to the bank buys precision: the exact next letter, a
+hand-picked hook timestamp, and an instant answer with no network round-trip.
+Worth doing for songs people reach for constantly, not for the long tail.
 
 **On `e`:** set it by hand. Real antakshari takes the letter from the last
 *sung line*, not the title, and stripping matras off a title programmatically
