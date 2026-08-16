@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>अंताक्षरी — एक अक्षर, एक गाना</title>
+<meta name="description" content="वही पुरानी अंताक्षरी। अक्षर मिलेगा, गाना तुम्हें याद करना है। 30 सेकंड।">
+
+<meta property="og:title" content="अंताक्षरी">
+<meta property="og:description" content="अक्षर मिलेगा, गाना तुम्हें याद करना है। कितने तक पहुँचोगे?">
+<meta property="og:type" content="website">
+
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23d1590f'/%3E%3Ctext x='50' y='50' font-size='68' fill='%23efe7d8' text-anchor='middle' dominant-baseline='central' font-family='serif'%3E%E0%A4%85%3C/text%3E%3C/svg%3E">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Tiro+Devanagari+Hindi:ital@0;1&family=Anek+Devanagari:wght@400;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="grain" aria-hidden="true"></div>
+
+<main class="shell">
+
+  <!-- ─────────── START ─────────── -->
+  <section id="screen-start" class="screen is-active">
+    <p class="kicker">बस की पिछली सीट · घर की छत · लंबा सफ़र</p>
+
+    <h1 class="wordmark">अंताक्षरी</h1>
+    <p class="wordmark-sub">antakshari</p>
+
+    <div class="rules">
+      <p><span class="rule-n">1</span> तुम्हें एक <b>अक्षर</b> मिलेगा।</p>
+      <p><span class="rule-n">2</span> उसी अक्षर से शुरू होने वाला <b>हिंदी गाना</b> लिखो।</p>
+      <p><span class="rule-n">3</span> हिंदी या इंग्लिश में लिखो — <i>tujhe dekha to</i> भी चलेगा।</p>
+      <p><span class="rule-n">4</span> <b>30 सेकंड</b> प्रति गाना। <b>3 ज़िंदगियाँ</b>।</p>
+    </div>
+
+    <button id="btn-start" class="btn btn-primary">शुरू करो</button>
+
+    <p class="best-line" id="start-best" hidden>तुम्हारा रिकॉर्ड · <b><span id="start-best-n">0</span></b></p>
+  </section>
+
+  <!-- ─────────── GAME ─────────── -->
+  <section id="screen-game" class="screen">
+
+    <header class="hud">
+      <div class="hud-item">
+        <span class="hud-label">लगातार</span>
+        <span class="hud-value" id="hud-streak">0</span>
+      </div>
+      <div class="hud-item hud-lives">
+        <span class="hud-label">ज़िंदगी</span>
+        <span class="hud-value" id="hud-lives">●●●</span>
+      </div>
+    </header>
+
+    <div class="stage">
+      <div class="timer">
+        <svg viewBox="0 0 100 100" aria-hidden="true">
+          <circle class="timer-track" cx="50" cy="50" r="46"></circle>
+          <circle class="timer-fill" id="timer-fill" cx="50" cy="50" r="46"></circle>
+        </svg>
+        <div class="letter" id="letter">क</div>
+      </div>
+      <p class="stage-hint" id="stage-hint">इस अक्षर से शुरू होने वाला गाना</p>
+    </div>
+
+    <form id="answer-form" class="answer" autocomplete="off">
+      <input id="answer" class="answer-input" type="text"
+             placeholder="गाना लिखो…" autocomplete="off"
+             autocorrect="off" autocapitalize="off" spellcheck="false"
+             enterkeyhint="go" aria-label="गाने का नाम">
+      <button class="btn btn-send" type="submit" aria-label="भेजो">›</button>
+    </form>
+
+    <p class="feedback" id="feedback">&nbsp;</p>
+
+    <button id="btn-skip" class="btn btn-ghost">छोड़ो — एक ज़िंदगी जाएगी</button>
+  </section>
+
+  <!-- ─────────── OVER ─────────── -->
+  <section id="screen-over" class="screen">
+    <p class="kicker">खेल ख़त्म</p>
+    <div class="score">
+      <span class="score-n" id="over-score">0</span>
+      <span class="score-label">गाने</span>
+    </div>
+    <p class="over-line" id="over-line"></p>
+    <p class="best-line">रिकॉर्ड · <b><span id="over-best">0</span></b></p>
+
+    <div class="over-actions">
+      <button id="btn-again" class="btn btn-primary">फिर से</button>
+      <button id="btn-share" class="btn btn-ghost">स्कोर कॉपी करो</button>
+    </div>
+  </section>
+
+</main>
+
+<footer class="foot">
+  <span>178 गाने · 1950s → आज</span>
+</footer>
+
+<!-- Reward card lives at body level on purpose: .screen animates `transform`,
+     which makes it a containing block and would trap this position:fixed
+     overlay inside the section instead of covering the viewport. -->
+<div class="card-wrap" id="card-wrap" hidden>
+  <div class="card">
+    <p class="card-tick">सही!</p>
+    <h2 class="card-title" id="card-title"></h2>
+    <p class="card-meta" id="card-meta"></p>
+    <div class="card-play">
+      <span class="eq" id="eq"><i></i><i></i><i></i><i></i></span>
+      <a class="card-yt" id="card-yt" target="_blank" rel="noopener">यूट्यूब पर सुनो ↗</a>
+    </div>
+    <button class="btn btn-primary btn-next" id="btn-next">आगे बढ़ो</button>
+  </div>
+</div>
+
+<!-- hidden YouTube host -->
+<div id="yt-host" aria-hidden="true"></div>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>

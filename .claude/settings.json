@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:truckplaylist.wtf)",
+      "WebFetch(domain:hornokplease.xyz)",
+      "WebFetch(domain:bihar-parivahan-nigam.vercel.app)",
+      "WebFetch(domain:mazdoor-radio.vercel.app)",
+      "WebFetch(domain:chaitapri.vercel.app)",
+      "WebFetch(domain:busdriver.wtf)"
+    ]
+  }
+}

@@ -1,0 +1,461 @@
+/* ============================================================
+   अंताक्षरी — chai-tapri paper aesthetic
+   warm newsprint · ink · one saffron accent
+   ============================================================ */
+
+:root {
+  --paper:      #efe7d8;
+  --paper-2:    #e5dac6;
+  --ink:        #1c1712;
+  --ink-soft:   #5a4f42;
+  --ink-faint:  #9a8d7c;
+  --saffron:    #d1590f;
+  --saffron-lo: #f0a06a;
+  --green:      #2f6b45;
+  --rule:       rgba(28, 23, 18, .18);
+
+  --f-display: "Tiro Devanagari Hindi", Georgia, serif;
+  --f-ui:      "Anek Devanagari", system-ui, sans-serif;
+  --f-mono:    "JetBrains Mono", ui-monospace, monospace;
+
+  --turn: 30;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+}
+
+body {
+  min-height: 100vh;
+  min-height: 100svh;   /* dodges mobile browser chrome */
+}
+
+body {
+  background: var(--paper);
+  background-image:
+    radial-gradient(120% 90% at 50% -10%, var(--paper-2) 0%, transparent 60%);
+  color: var(--ink);
+  font-family: var(--f-ui);
+  -webkit-font-smoothing: antialiased;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow-x: hidden;
+}
+
+/* ── film grain ───────────────────────────────────────────── */
+.grain {
+  position: fixed;
+  inset: -50%;
+  pointer-events: none;
+  z-index: 9;
+  opacity: .40;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.42'/%3E%3C/svg%3E");
+  animation: grain 900ms steps(3) infinite;
+}
+@keyframes grain {
+  0%   { transform: translate(0, 0); }
+  33%  { transform: translate(-3%, 2%); }
+  66%  { transform: translate(2%, -3%); }
+  100% { transform: translate(0, 0); }
+}
+
+/* ── shell / screens ──────────────────────────────────────── */
+.shell {
+  width: 100%;
+  max-width: 34rem;
+  padding: clamp(1.5rem, 5vw, 3rem) 1.25rem 1rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  position: relative;
+  z-index: 1;
+}
+
+.screen { display: none; }
+.screen.is-active {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  animation: rise .45s cubic-bezier(.2,.8,.3,1) both;
+}
+@keyframes rise {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* ── type ─────────────────────────────────────────────────── */
+.kicker {
+  font-size: .72rem;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin: 0 0 1.75rem;
+}
+
+.wordmark {
+  font-family: var(--f-display);
+  font-size: clamp(3.2rem, 15vw, 5rem);
+  line-height: .95;
+  margin: 0;
+  letter-spacing: -.01em;
+}
+.wordmark-sub {
+  font-family: var(--f-mono);
+  font-size: .7rem;
+  letter-spacing: .42em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin: .55rem 0 2.5rem;
+  padding-left: .42em;
+}
+
+/* ── rules ────────────────────────────────────────────────── */
+.rules {
+  text-align: left;
+  border-top: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+  padding: 1.1rem 0;
+  margin-bottom: 2.25rem;
+  width: 100%;
+  max-width: 22rem;
+}
+/* hanging number, text flows as a normal paragraph.
+   (flex here turned every inline tag into a flex item and shredded the wrap) */
+.rules p {
+  position: relative;
+  margin: .6rem 0;
+  padding-left: 1.7rem;
+  font-size: .95rem;
+  line-height: 1.7;
+  color: var(--ink-soft);
+}
+.rules b { color: var(--ink); font-weight: 600; }
+.rules i {
+  font-family: var(--f-mono);
+  font-style: normal;
+  font-size: .82em;
+  white-space: nowrap;
+}
+.rule-n {
+  position: absolute;
+  left: 0;
+  top: .1em;
+  font-family: var(--f-mono);
+  font-size: .68rem;
+  line-height: 2.3;
+  color: var(--saffron);
+}
+
+/* ── buttons ──────────────────────────────────────────────── */
+.btn {
+  font-family: var(--f-ui);
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: transform .12s ease, background .18s ease, color .18s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.btn:active { transform: scale(.97); }
+
+.btn-primary {
+  background: var(--ink);
+  color: var(--paper);
+  padding: .85rem 2.4rem;
+}
+.btn-primary:hover { background: var(--saffron); }
+
+.btn-ghost {
+  background: none;
+  color: var(--ink-faint);
+  border-color: var(--rule);
+  padding: .6rem 1.4rem;
+  font-size: .82rem;
+  font-weight: 400;
+}
+.btn-ghost:hover { color: var(--ink); border-color: var(--ink-soft); }
+
+/* ── HUD ──────────────────────────────────────────────────── */
+.hud {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: clamp(1rem, 5vw, 2.5rem);
+}
+.hud-item { display: flex; flex-direction: column; gap: .15rem; }
+.hud-lives { align-items: flex-end; }
+.hud-label {
+  font-size: .6rem;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.hud-value {
+  font-family: var(--f-mono);
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: .08em;
+}
+#hud-lives { color: var(--saffron); }
+
+/* ── stage: timer ring + letter ───────────────────────────── */
+.stage { margin-bottom: 1.75rem; }
+
+.timer {
+  position: relative;
+  width: clamp(11rem, 44vw, 14rem);
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+}
+.timer svg {
+  position: absolute;
+  inset: 0;
+  transform: rotate(-90deg);
+}
+.timer circle {
+  fill: none;
+  stroke-width: 2.5;
+}
+.timer-track { stroke: var(--rule); }
+.timer-fill {
+  stroke: var(--saffron);
+  stroke-linecap: round;
+  stroke-dasharray: 289.03;      /* 2πr, r=46 */
+  stroke-dashoffset: 0;
+  transition: stroke-dashoffset 1s linear, stroke .3s ease;
+}
+.timer.is-urgent .timer-fill { stroke: #b3200f; }
+.timer.is-urgent .letter { animation: pulse .7s ease-in-out infinite; }
+@keyframes pulse {
+  50% { transform: scale(1.06); }
+}
+
+.letter {
+  font-family: var(--f-display);
+  font-size: clamp(4.5rem, 20vw, 6.5rem);
+  line-height: 1;
+  padding-bottom: .08em;
+  transition: transform .3s ease;
+}
+.letter.is-new { animation: stamp .5s cubic-bezier(.2,1.4,.4,1) both; }
+@keyframes stamp {
+  from { opacity: 0; transform: scale(1.5) rotate(-6deg); }
+  to   { opacity: 1; transform: none; }
+}
+
+.stage-hint {
+  font-size: .78rem;
+  color: var(--ink-faint);
+  margin: 1rem 0 0;
+}
+
+/* ── answer input ─────────────────────────────────────────── */
+.answer {
+  width: 100%;
+  max-width: 24rem;
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  border-bottom: 1.5px solid var(--ink);
+  padding-bottom: .4rem;
+}
+.answer.is-wrong { animation: shake .4s ease; }
+@keyframes shake {
+  20%, 60% { transform: translateX(-7px); }
+  40%, 80% { transform: translateX(7px); }
+}
+
+.answer-input {
+  flex: 1;
+  background: none;
+  border: none;
+  outline: none;
+  font-family: var(--f-display);
+  font-size: 1.35rem;
+  color: var(--ink);
+  padding: .3rem 0;
+  min-width: 0;
+}
+.answer-input::placeholder { color: var(--ink-faint); opacity: .7; }
+
+.btn-send {
+  background: none;
+  border: none;
+  color: var(--ink);
+  font-size: 1.9rem;
+  line-height: 1;
+  padding: 0 .3rem;
+  cursor: pointer;
+  font-family: var(--f-ui);
+}
+.btn-send:hover { color: var(--saffron); }
+
+/* ── feedback ─────────────────────────────────────────────── */
+.feedback {
+  font-size: .85rem;
+  min-height: 1.4rem;
+  margin: .9rem 0 1.5rem;
+  color: var(--ink-soft);
+  transition: color .2s;
+}
+.feedback.is-bad  { color: #b3200f; }
+.feedback.is-good { color: var(--green); }
+
+/* ── reward card ──────────────────────────────────────────── */
+/* `display:grid` beats the UA's `[hidden]{display:none}`, so the card would
+   sit on screen from page load. This has to come first and win. */
+.card-wrap[hidden] { display: none; }
+
+.card-wrap {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  padding: 1.25rem;
+  background: rgba(28, 23, 18, .55);
+  backdrop-filter: blur(3px);
+  animation: fade .25s ease both;
+}
+@keyframes fade { from { opacity: 0; } }
+
+.card {
+  background: var(--paper);
+  border-radius: 1.25rem;
+  padding: 2.25rem 1.75rem 1.75rem;
+  width: 100%;
+  max-width: 21rem;
+  text-align: center;
+  box-shadow: 0 24px 60px rgba(0,0,0,.3);
+  animation: rise .35s cubic-bezier(.2,.9,.3,1) both;
+}
+.card-tick {
+  font-size: .68rem;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: var(--green);
+  margin: 0 0 .9rem;
+}
+.card-title {
+  font-family: var(--f-display);
+  font-size: 1.9rem;
+  line-height: 1.25;
+  margin: 0 0 .5rem;
+}
+.card-meta {
+  font-family: var(--f-mono);
+  font-size: .72rem;
+  color: var(--ink-faint);
+  margin: 0 0 1.5rem;
+}
+.card-play {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: .8rem;
+  margin-bottom: 1.6rem;
+}
+.card-yt {
+  font-size: .8rem;
+  color: var(--saffron);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+}
+.card-yt:hover { border-bottom-color: var(--saffron); }
+.btn-next { width: 100%; }
+
+/* equaliser bars */
+.eq { display: flex; align-items: flex-end; gap: 3px; height: 15px; }
+.eq i {
+  width: 3px;
+  background: var(--saffron);
+  border-radius: 2px;
+  height: 30%;
+}
+.eq.is-on i { animation: eq .9s ease-in-out infinite; }
+.eq.is-on i:nth-child(2) { animation-delay: .15s; }
+.eq.is-on i:nth-child(3) { animation-delay: .3s; }
+.eq.is-on i:nth-child(4) { animation-delay: .45s; }
+@keyframes eq {
+  0%, 100% { height: 25%; }
+  50%      { height: 100%; }
+}
+
+/* ── game over ────────────────────────────────────────────── */
+.score {
+  display: flex;
+  align-items: baseline;
+  gap: .6rem;
+  margin-bottom: 1rem;
+}
+.score-n {
+  font-family: var(--f-display);
+  font-size: clamp(5rem, 26vw, 8rem);
+  line-height: .9;
+}
+.score-label {
+  font-family: var(--f-display);
+  font-size: 1.5rem;
+  color: var(--ink-faint);
+}
+.over-line {
+  font-size: .95rem;
+  color: var(--ink-soft);
+  max-width: 20rem;
+  margin: 0 0 1.75rem;
+  line-height: 1.6;
+}
+.best-line {
+  font-family: var(--f-mono);
+  font-size: .72rem;
+  letter-spacing: .1em;
+  color: var(--ink-faint);
+  margin: 0 0 2rem;
+}
+.over-actions {
+  display: flex;
+  flex-direction: column;
+  gap: .9rem;
+  align-items: center;
+}
+
+/* ── footer ───────────────────────────────────────────────── */
+.foot {
+  padding: 1.5rem 1rem 2rem;
+  font-family: var(--f-mono);
+  font-size: .62rem;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  position: relative;
+  z-index: 1;
+}
+
+/* hidden YouTube iframe host — must stay rendered, not display:none */
+#yt-host {
+  position: fixed;
+  width: 1px;
+  height: 1px;
+  bottom: 0;
+  left: 0;
+  opacity: .01;
+  pointer-events: none;
+  z-index: -1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}
