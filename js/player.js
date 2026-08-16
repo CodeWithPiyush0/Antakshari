@@ -1,32 +1,44 @@
 /**
  * player.js — plays a 15-second hook as the reward for a correct answer.
  *
- * Uses the YouTube IFrame API so nothing is self-hosted and artists still get
- * their play counted. Two modes:
+ * Uses the YouTube IFrame API, so nothing is self-hosted, there's no bandwidth
+ * cost, and the artist still gets the play counted.
  *
- *   song.yt set   → exact video, exact timestamp (precise; fill these in)
- *   song.yt null  → YouTube search for the title, play the top result
+ * Every song carries an explicit `yt` video id, verified embeddable when the
+ * bank was built. 37 of them are null: their rights holders (Shemaroo,
+ * Saregama, YRF) block embedding on every upload, so no id exists that would
+ * play here. Those degrade to the card's "यूट्यूब पर सुनो" link.
  *
- * Search mode is convenient but occasionally lands on a cover or a remix.
- * Everything degrades gracefully: if the API is blocked or slow, the card
- * still shows its "यूट्यूब पर सुनो" link and the game plays on.
+ * There used to be a `loadPlaylist({listType:"search"})` fallback for songs
+ * without an id. It is gone because it silently does nothing — YouTube removed
+ * search-based loading from the IFrame API in November 2020. It threw no error
+ * and reported no state, which made it look like it worked.
  */
 
 const HOST_ID = "yt-host";
 const HOOK_SECONDS = 15;
 const READY_TIMEOUT = 6000;
+const PLAY_TIMEOUT = 5000;
+
+const PLAYING = 1;
 
 let player = null;
 let readyPromise = null;
 let stopTimer = null;
+let watcher = null;   // resolves the current playHook() call
 
 /** Inject the IFrame API and build the (invisible) player. Idempotent. */
 export function preload() {
   if (readyPromise) return readyPromise;
 
   readyPromise = new Promise((resolve) => {
-    const settle = () => resolve(Boolean(player));
-    const bail = setTimeout(settle, READY_TIMEOUT);
+    let settled = false;
+    const settle = (ok) => {
+      if (settled) return;
+      settled = true;
+      resolve(ok);
+    };
+    const bail = setTimeout(() => settle(false), READY_TIMEOUT);
 
     const build = () => {
       try {
@@ -41,19 +53,25 @@ export function preload() {
             modestbranding: 1,
           },
           events: {
-            onReady: () => { clearTimeout(bail); settle(); },
-            onError: () => stop(),
+            onReady: () => { clearTimeout(bail); settle(true); },
+            onStateChange: (e) => {
+              if (e.data === PLAYING) watcher?.(true);
+            },
+            onError: () => {
+              // 101/150 = embedding disabled, 100 = removed
+              watcher?.(false);
+              stop();
+            },
           },
         });
       } catch {
         clearTimeout(bail);
-        resolve(false);
+        settle(false);
       }
     };
 
     if (window.YT && window.YT.Player) return build();
 
-    // the API calls this global when it finishes loading
     const prev = window.onYouTubeIframeAPIReady;
     window.onYouTubeIframeAPIReady = () => {
       if (typeof prev === "function") prev();
@@ -63,49 +81,59 @@ export function preload() {
     const tag = document.createElement("script");
     tag.src = "https://www.youtube.com/iframe_api";
     tag.async = true;
-    tag.onerror = () => { clearTimeout(bail); resolve(false); };
+    tag.onerror = () => { clearTimeout(bail); settle(false); };
     document.head.appendChild(tag);
   });
 
   return readyPromise;
 }
 
-/** Public YouTube search URL for a song — always works, even with no API. */
+/** Public YouTube search URL — always works, even when the embed can't. */
 export function searchUrl(song) {
   const q = `${song.t} ${song.f} ${song.y}`;
   return `https://www.youtube.com/results?search_query=${encodeURIComponent(q)}`;
 }
 
-/** Play the song's hook. Resolves true if playback was actually started. */
+/**
+ * Play the song's hook.
+ * @returns {Promise<boolean>} true only if playback actually started.
+ */
 export async function playHook(song, seconds = HOOK_SECONDS) {
   stop();
+  if (!song.yt) return false;          // known un-embeddable
 
   const ok = await preload();
   if (!ok || !player) return false;
 
-  try {
-    if (song.yt) {
+  const start = song.h ?? 30;
+
+  return new Promise((resolve) => {
+    let settled = false;
+    const finish = (result) => {
+      if (settled) return;
+      settled = true;
+      watcher = null;
+      clearTimeout(giveUp);
+      resolve(result);
+    };
+
+    // resolved by onStateChange(PLAYING) or onError
+    watcher = finish;
+    const giveUp = setTimeout(() => finish(false), PLAY_TIMEOUT);
+
+    try {
       player.loadVideoById({
         videoId: song.yt,
-        startSeconds: song.h ?? 30,
-        endSeconds: (song.h ?? 30) + seconds,
+        startSeconds: start,
+        endSeconds: start + seconds,
       });
-    } else {
-      player.loadPlaylist({
-        listType: "search",
-        list: `${song.t} ${song.f} song`,
-        index: 0,
-        startSeconds: 30,
-      });
+      player.setVolume(70);
+      // belt and braces: endSeconds occasionally overshoots
+      stopTimer = setTimeout(stop, (seconds + 1) * 1000);
+    } catch {
+      finish(false);
     }
-    player.setVolume(70);
-
-    // hard stop — endSeconds is unreliable in search mode
-    stopTimer = setTimeout(stop, seconds * 1000);
-    return true;
-  } catch {
-    return false;
-  }
+  });
 }
 
 /** Stop playback and clear any pending stop. */
@@ -114,6 +142,7 @@ export function stop() {
     clearTimeout(stopTimer);
     stopTimer = null;
   }
+  watcher = null;
   try {
     player?.stopVideo?.();
   } catch {

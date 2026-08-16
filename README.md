@@ -92,19 +92,26 @@ Reload and check the console — `validate.js` prints wrong start letters, dead-
 
 ## Audio
 
-Two modes, per song:
+The hook plays **in the page**, through a hidden YouTube IFrame player. The
+"यूट्यूब पर सुनो" link on the card is only a fallback — you never have to leave
+the tab.
 
-| `yt` | behaviour |
-|---|---|
-| set | exact video, seeks to `h`, plays 15s |
-| `null` | YouTube search for title + film, plays the top result |
+**319 of 356 songs have a real, embed-verified video id.** They seek to `h` and
+play 15 seconds. The other 37 carry `yt: null`: their rights holders (Shemaroo,
+Saregama, YRF) disable embedding on *every* upload of those songs, so no id
+exists that would play here. Those show the card and the link, silently.
 
-Every song currently ships with `yt: null`, so playback goes through search.
-That works without an API key but occasionally lands on a cover or a remix.
-Filling in real video IDs is the single biggest quality upgrade available —
-do the top 30 songs first.
+Ids were resolved by scraping YouTube search and confirming `playableInEmbed`
+on each candidate — see the note below if you add songs.
 
-If the IFrame API is blocked or slow, the game plays on silently and the reward
-card still offers a **यूट्यूब पर सुनो** link.
+> **Don't reach for `listType: "search"`.** The obvious way to avoid hardcoding
+> ids is `player.loadPlaylist({listType: "search", list: query})`. It is dead —
+> YouTube removed it in November 2020. It throws no error and reports no state;
+> it simply never plays. This project shipped with it briefly and the bug was
+> invisible from the outside.
+
+To find an id for a new song: search YouTube, open the video, confirm it plays
+in an embed (not just on youtube.com), and paste the 11-character id from the
+URL. Set `h` to a few seconds before the recognisable hook.
 
 Nothing is self-hosted, so there's no copyright exposure and no bandwidth cost.
